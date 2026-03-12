@@ -1,0 +1,98 @@
+############################
+# OS-generated files
+############################
+
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.Spotlight-V100/
+.Trashes/
+
+############################
+# Editor / IDE
+############################
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+.project
+.classpath
+
+############################
+# Logs
+############################
+
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+############################
+# Node / JavaScript tooling
+############################
+
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+############################
+# Build output
+############################
+
+dist/
+build/
+coverage/
+.tmp/
+.temp/
+.cache/
+
+############################
+# Environment files
+############################
+
+.env
+.env.*
+!.env.example
+
+############################
+# Misc
+############################
+
+*.bak
+*.tmp
+*.orig
+
+############################
+# Mac metadata
+############################
+
+.AppleDouble
+.LSOverride
+
+############################
+# Python cache (sometimes appears in mixed repos)
+############################
+
+__pycache__/
+*.py[cod]
+
+############################
+# Package managers
+############################
+
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
