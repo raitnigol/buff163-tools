@@ -52,7 +52,8 @@ node_modules/
 # Build output
 ############################
 
-dist/
+dist/*
+!dist/buff163-tools.user.js
 build/
 coverage/
 .tmp/

@@ -37,9 +37,11 @@ marketplace to make inventory management and trading workflows easier.
 
 ### 2. Install the script from this repository
 
-File:
+Canonical install URL (matches `@downloadURL` in the script header):
 
-    buff163-tools.user.js
+https://raw.githubusercontent.com/raitnigol/buff163-tools/main/dist/buff163-tools.user.js
+
+The repository root file `buff163-tools.user.js` is the **same build output** as `dist/buff163-tools.user.js`, kept in sync by `npm run build` so older links to the root path keep working. **Do not edit either file by hand**; change `src/` and rebuild.
 
 ### 3. Open your BUFF inventory
 
@@ -51,13 +53,25 @@ The new control will appear in the **top navigation tabs**.
 
 ## Development
 
-This repository intentionally keeps the script **simple and
-dependency-free**.
+Source lives under `src/` and is bundled with **esbuild** into
+`dist/buff163-tools.user.js` (and copied to `buff163-tools.user.js` at the
+repo root).
 
-Project structure:
+From the repository root:
+
+    npm install
+    npm run build
+
+Use `npm run watch` for a watch build while editing.
+
+Project structure (high level):
 
     buff163-tools/
-    ├─ buff163-tools.user.js
+    ├─ src/                    # editable source
+    ├─ dist/buff163-tools.user.js   # built userscript (tracked in git)
+    ├─ buff163-tools.user.js   # same bytes as dist/ (legacy raw URL)
+    ├─ scripts/build.mjs
+    ├─ userscript.header.txt
     ├─ README.md
     ├─ LICENSE
     └─ screenshots/

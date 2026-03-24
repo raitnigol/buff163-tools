@@ -9,14 +9,18 @@ const distDir = path.join(root, 'dist');
 const headerPath = path.join(root, 'userscript.header.txt');
 const bundlePath = path.join(distDir, 'bundle.js');
 const outPath = path.join(distDir, 'buff163-tools.user.js');
+const rootUserscriptPath = path.join(root, 'buff163-tools.user.js');
 
 fs.mkdirSync(distDir, { recursive: true });
 
 function assembleUserscript() {
     const header = fs.readFileSync(headerPath, 'utf8').trimEnd();
     const bundle = fs.readFileSync(bundlePath, 'utf8');
-    fs.writeFileSync(outPath, `${header}\n\n${bundle}\n`);
+    const assembled = `${header}\n\n${bundle}\n`;
+    fs.writeFileSync(outPath, assembled);
+    fs.writeFileSync(rootUserscriptPath, assembled);
     console.log(`Built ${path.relative(root, outPath)}`);
+    console.log(`Synced ${path.relative(root, rootUserscriptPath)} (legacy raw URL)`);
 }
 
 const userscriptPlugin = {

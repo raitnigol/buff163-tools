@@ -13,8 +13,8 @@
 // @homepageURL  https://github.com/raitnigol/buff163-tools
 // @supportURL   https://github.com/raitnigol/buff163-tools/issues
 //
-// @downloadURL  https://raw.githubusercontent.com/raitnigol/buff163-tools/main/buff163-tools.user.js
-// @updateURL    https://raw.githubusercontent.com/raitnigol/buff163-tools/main/buff163-tools.user.js
+// @downloadURL  https://raw.githubusercontent.com/raitnigol/buff163-tools/main/dist/buff163-tools.user.js
+// @updateURL    https://raw.githubusercontent.com/raitnigol/buff163-tools/main/dist/buff163-tools.user.js
 //
 // @grant        none
 // ==/UserScript==
