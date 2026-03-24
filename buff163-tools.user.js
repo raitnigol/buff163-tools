@@ -117,6 +117,7 @@
                 min-height: ${finalHeight}px !important;
                 height: ${finalHeight}px !important;
                 box-sizing: border-box;
+                position: relative;
             }
 
             #j_list_card li.my_inventory .tm-buff-meta {
@@ -259,24 +260,65 @@
             }
 
             #j_list_card li.my_inventory .tm-buff-item-settings-btn {
-                display: inline-flex;
+                display: flex;
                 align-items: center;
                 justify-content: center;
-                width: 18px;
-                height: 18px;
-                margin-left: 8px;
+                width: 28px;
+                height: 28px;
                 border: 1px solid #d1d5db;
                 border-radius: 4px;
                 color: #4b5563;
                 background: #f8fafc;
                 cursor: pointer;
-                font-size: 12px;
+                font-size: 11px;
                 line-height: 1;
+                position: absolute;
+                left: 8px;
+                bottom: 8px;
+                z-index: 3;
+                opacity: 0.95;
+                padding: 0;
+                overflow: visible;
             }
 
             #j_list_card li.my_inventory .tm-buff-item-settings-btn:hover {
                 border-color: #9ca3af;
                 background: #f1f5f9;
+            }
+
+            #j_list_card li.my_inventory .tm-buff-card-state-chip {
+                position: absolute;
+                left: 42px;
+                bottom: 10px;
+                z-index: 3;
+                min-width: 58px;
+                padding: 0 6px;
+                border-radius: 9999px;
+                border: 1px solid #93c5fd;
+                color: #1d4ed8;
+                background: #eff6ff;
+                font-size: 10px;
+                line-height: 16px;
+                text-align: center;
+                box-sizing: border-box;
+                pointer-events: none;
+            }
+
+            #j_list_card li.my_inventory .tm-buff-card-state-chip.is-excluded {
+                color: #5b21b6;
+                border-color: #c4b5fd;
+                background: #f5f3ff;
+                font-weight: 600;
+            }
+
+            #j_list_card li.my_inventory .tm-buff-item-settings-btn .tm-buff-item-settings-icon {
+                width: auto;
+                height: auto;
+                display: inline-block;
+                font-style: normal;
+                font-size: 14px;
+                line-height: 1;
+                color: #4b5563;
             }
 
             #j_list_card li.my_inventory .tm-buff-merged-note {
@@ -329,6 +371,8 @@
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                font-size: 14px;
+                letter-spacing: 0.01em;
             }
 
             #tm-buff-item-modal .tm-buff-modal-close,
@@ -393,12 +437,14 @@
 
             #tm-buff-item-modal .tm-buff-modal-btn,
             #tm-buff-global-settings-modal .tm-buff-modal-btn {
-                height: 30px;
+                height: 32px;
                 padding: 0 12px;
                 border-radius: 6px;
                 border: 1px solid #d1d5db;
                 background: #ffffff;
                 cursor: pointer;
+                font-size: 12px;
+                font-weight: 600;
             }
 
             #tm-buff-item-modal .tm-buff-modal-btn.primary,
@@ -438,11 +484,14 @@
             #tm-buff-global-settings-modal .tm-buff-modal-check {
                 font-weight: 600;
                 color: #1f2937;
+                font-size: 12px;
+                line-height: 1.35;
             }
 
             #tm-buff-global-settings-modal .tm-buff-modal-hint {
                 margin-top: 10px;
                 line-height: 1.4;
+                font-size: 11px;
             }
 
             #tm-buff-global-settings-modal .tm-buff-modal-meta {
@@ -450,7 +499,7 @@
                 padding-top: 0;
                 border-top: none;
                 font-size: 11px;
-                color: #6b7280;
+                color: #4b5563;
             }
 
             #tm-buff-global-settings-modal .tm-buff-modal-meta a {
@@ -476,7 +525,7 @@
 
             #tm-buff-global-settings-modal .tm-buff-global-header-title {
                 margin: 0;
-                font-size: 12px;
+                font-size: 13px;
                 font-weight: 700;
                 color: #111827;
             }
@@ -484,7 +533,7 @@
             #tm-buff-global-settings-modal .tm-buff-global-header-sub {
                 margin: 2px 0 0 0;
                 font-size: 11px;
-                color: #6b7280;
+                color: #64748b;
             }
 
             #tm-buff-global-settings-modal .tm-buff-global-footer {
@@ -1461,12 +1510,6 @@
                 actionsLine.innerHTML =
                     (!isMergedItem && assetId && targetStatusText
                         ? `<span class="tm-buff-target-status ${targetStatusClass.includes('ready') ? 'ready' : ''}">${targetStatusText}</span>`
-                        : '') +
-                    (!isMergedItem && assetId
-                        ? `<span class="tm-buff-exclude-toggle readonly${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Excluded from totals' : 'Included in totals'}">${excluded ? 'Excluded' : 'Included'}</span>`
-                        : '') +
-                    (!isMergedItem && assetId
-                        ? `<button type="button" class="tm-buff-item-settings-btn" title="Open item settings">⚙</button>`
                         : (isMergedItem ? `<span class="tm-buff-merged-note">Merged stack (settings unavailable)</span>` : ''));
 
                 const fullParts = [];
@@ -1489,24 +1532,46 @@
                 actionsLine.innerHTML =
                     (!isMergedItem && assetId && targetStatusText
                         ? `<span class="tm-buff-target-status ${targetStatusClass.includes('ready') ? 'ready' : ''}">${targetStatusText}</span>`
-                        : '') +
-                    (!isMergedItem && assetId
-                        ? `<span class="tm-buff-exclude-toggle readonly${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Excluded from totals' : 'Included in totals'}">${excluded ? 'Excluded' : 'Included'}</span>`
-                        : '') +
-                    (!isMergedItem && assetId
-                        ? `<button type="button" class="tm-buff-item-settings-btn" title="Open item settings">⚙</button>`
                         : (isMergedItem ? `<span class="tm-buff-merged-note">Merged stack (settings unavailable)</span>` : '&nbsp;'));
                 refsLine.removeAttribute('title');
                 actionsLine.removeAttribute('title');
             }
-
-            const settingsBtn = actionsLine.querySelector('.tm-buff-item-settings-btn');
-            if (settingsBtn && !isMergedItem) {
-                settingsBtn.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    openItemSettingsModal(item, marketPriceEur);
-                });
+            let settingsBtn = item.querySelector('.tm-buff-item-settings-btn');
+            if (!isMergedItem && assetId) {
+                if (!settingsBtn) {
+                    settingsBtn = document.createElement('button');
+                    settingsBtn.type = 'button';
+                    settingsBtn.className = 'tm-buff-item-settings-btn';
+                    settingsBtn.title = 'Open item settings';
+                    settingsBtn.innerHTML = `
+                        <i class="tm-buff-item-settings-icon" aria-hidden="true">⚙</i>
+                    `;
+                    item.appendChild(settingsBtn);
+                }
+                if (settingsBtn.dataset.tmBuffBound !== '1') {
+                    settingsBtn.dataset.tmBuffBound = '1';
+                    settingsBtn.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        const currentMarketPriceEur = getMarketPriceEurFromItem(item);
+                        openItemSettingsModal(item, currentMarketPriceEur);
+                    });
+                }
+            } else if (settingsBtn) {
+                settingsBtn.remove();
+            }
+            let stateChip = item.querySelector('.tm-buff-card-state-chip');
+            if (!isMergedItem && assetId) {
+                if (!stateChip) {
+                    stateChip = document.createElement('span');
+                    stateChip.className = 'tm-buff-card-state-chip';
+                    item.appendChild(stateChip);
+                }
+                stateChip.textContent = excluded ? 'Excluded' : 'Included';
+                stateChip.classList.toggle('is-excluded', excluded);
+                stateChip.title = excluded ? 'Excluded from totals' : 'Included in totals';
+            } else if (stateChip) {
+                stateChip.remove();
             }
 
             if (!buffPaidCny && !isCustomPaid) {
