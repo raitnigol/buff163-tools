@@ -312,7 +312,8 @@
                 font-size: 13px;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-header {
+            #tm-buff-item-modal .tm-buff-modal-header,
+            #tm-buff-global-settings-modal .tm-buff-modal-header {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
@@ -320,7 +321,8 @@
                 border-bottom: 1px solid #e5e7eb;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-title {
+            #tm-buff-item-modal .tm-buff-modal-title,
+            #tm-buff-global-settings-modal .tm-buff-modal-title {
                 font-weight: 600;
                 max-width: 300px;
                 white-space: nowrap;
@@ -328,7 +330,8 @@
                 text-overflow: ellipsis;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-close {
+            #tm-buff-item-modal .tm-buff-modal-close,
+            #tm-buff-global-settings-modal .tm-buff-modal-close {
                 border: none;
                 background: transparent;
                 color: #6b7280;
@@ -337,22 +340,26 @@
                 line-height: 1;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-body {
+            #tm-buff-item-modal .tm-buff-modal-body,
+            #tm-buff-global-settings-modal .tm-buff-modal-body {
                 padding: 12px;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-row {
+            #tm-buff-item-modal .tm-buff-modal-row,
+            #tm-buff-global-settings-modal .tm-buff-modal-row {
                 margin-bottom: 10px;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-row label {
+            #tm-buff-item-modal .tm-buff-modal-row label,
+            #tm-buff-global-settings-modal .tm-buff-modal-row label {
                 display: block;
                 margin-bottom: 4px;
                 color: #4b5563;
                 font-size: 12px;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-input {
+            #tm-buff-item-modal .tm-buff-modal-input,
+            #tm-buff-global-settings-modal .tm-buff-modal-input {
                 width: 100%;
                 height: 30px;
                 padding: 0 8px;
@@ -361,26 +368,30 @@
                 box-sizing: border-box;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-check {
+            #tm-buff-item-modal .tm-buff-modal-check,
+            #tm-buff-global-settings-modal .tm-buff-modal-check {
                 display: inline-flex;
                 align-items: center;
                 gap: 6px;
                 cursor: pointer;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-hint {
+            #tm-buff-item-modal .tm-buff-modal-hint,
+            #tm-buff-global-settings-modal .tm-buff-modal-hint {
                 color: #6b7280;
                 font-size: 12px;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-actions {
+            #tm-buff-item-modal .tm-buff-modal-actions,
+            #tm-buff-global-settings-modal .tm-buff-modal-actions {
                 display: flex;
                 justify-content: flex-end;
                 gap: 8px;
                 margin-top: 12px;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-btn {
+            #tm-buff-item-modal .tm-buff-modal-btn,
+            #tm-buff-global-settings-modal .tm-buff-modal-btn {
                 height: 30px;
                 padding: 0 12px;
                 border-radius: 6px;
@@ -389,10 +400,36 @@
                 cursor: pointer;
             }
 
-            #tm-buff-item-modal .tm-buff-modal-btn.primary {
+            #tm-buff-item-modal .tm-buff-modal-btn.primary,
+            #tm-buff-global-settings-modal .tm-buff-modal-btn.primary {
                 border-color: #3b82f6;
                 background: #3b82f6;
                 color: #ffffff;
+            }
+
+            #tm-buff-float-settings a {
+                cursor: pointer;
+            }
+
+            #tm-buff-global-settings-backdrop {
+                position: fixed;
+                inset: 0;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                background: rgba(15, 23, 42, 0.45);
+                z-index: 99999;
+            }
+
+            #tm-buff-global-settings-modal {
+                width: 360px;
+                max-width: calc(100vw - 24px);
+                border-radius: 8px;
+                border: 1px solid #d1d5db;
+                background: #ffffff;
+                box-shadow: 0 10px 32px rgba(0, 0, 0, 0.22);
+                color: #111827;
+                font-size: 13px;
             }
 
             #tm-buff-toolbar {
@@ -686,6 +723,34 @@
         saveSettings();
     }
 
+    function createStandardModalBackdrop({
+        backdropId,
+        modalId,
+        title,
+        closeId,
+        bodyHtml,
+    }) {
+        let backdrop = document.getElementById(backdropId);
+        if (backdrop) return backdrop;
+
+        backdrop = document.createElement('div');
+        backdrop.id = backdropId;
+        backdrop.innerHTML = `
+            <div id="${modalId}">
+                <div class="tm-buff-modal-header">
+                    <div class="tm-buff-modal-title">${title}</div>
+                    <button type="button" class="tm-buff-modal-close" id="${closeId}" aria-label="Close">×</button>
+                </div>
+                <div class="tm-buff-modal-body">
+                    ${bodyHtml}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(backdrop);
+        return backdrop;
+    }
+
     function closeItemSettingsModal() {
         const backdrop = document.getElementById('tm-buff-item-modal-backdrop');
         if (!backdrop) return;
@@ -694,42 +759,36 @@
     }
 
     function getOrCreateItemSettingsModal() {
-        let backdrop = document.getElementById('tm-buff-item-modal-backdrop');
-        if (backdrop) return backdrop;
-
-        backdrop = document.createElement('div');
-        backdrop.id = 'tm-buff-item-modal-backdrop';
-        backdrop.innerHTML = `
-            <div id="tm-buff-item-modal">
-                <div class="tm-buff-modal-header">
-                    <div class="tm-buff-modal-title" id="tm-buff-modal-title">Item settings</div>
-                    <button type="button" class="tm-buff-modal-close" id="tm-buff-modal-close" aria-label="Close">×</button>
-                </div>
-                <div class="tm-buff-modal-body">
-                    <div class="tm-buff-modal-row">
-                        <label for="tm-buff-modal-paid-eur">Custom paid price (EUR)</label>
-                        <input id="tm-buff-modal-paid-eur" class="tm-buff-modal-input" type="number" min="0" step="0.01" placeholder="Leave empty to use BUFF paid">
-                    </div>
-                    <div class="tm-buff-modal-row">
-                        <label for="tm-buff-modal-target">Target sell price (EUR)</label>
-                        <input id="tm-buff-modal-target" class="tm-buff-modal-input" type="number" min="0" step="0.01" placeholder="Leave empty to disable">
-                    </div>
-                    <div class="tm-buff-modal-row">
-                        <label class="tm-buff-modal-check">
-                            <input id="tm-buff-modal-excluded" type="checkbox">
-                            Exclude from portfolio totals
-                        </label>
-                    </div>
-                    <div class="tm-buff-modal-hint" id="tm-buff-modal-hint"></div>
-                    <div class="tm-buff-modal-actions">
-                        <button type="button" class="tm-buff-modal-btn" id="tm-buff-modal-cancel">Cancel</button>
-                        <button type="button" class="tm-buff-modal-btn primary" id="tm-buff-modal-save">Save</button>
-                    </div>
-                </div>
+        const bodyHtml = `
+            <div class="tm-buff-modal-row">
+                <label for="tm-buff-modal-paid-eur">Custom paid price (EUR)</label>
+                <input id="tm-buff-modal-paid-eur" class="tm-buff-modal-input" type="number" min="0" step="0.01" placeholder="Leave empty to use BUFF paid">
+            </div>
+            <div class="tm-buff-modal-row">
+                <label for="tm-buff-modal-target">Target sell price (EUR)</label>
+                <input id="tm-buff-modal-target" class="tm-buff-modal-input" type="number" min="0" step="0.01" placeholder="Leave empty to disable">
+            </div>
+            <div class="tm-buff-modal-row">
+                <label class="tm-buff-modal-check">
+                    <input id="tm-buff-modal-excluded" type="checkbox">
+                    Exclude from portfolio totals
+                </label>
+            </div>
+            <div class="tm-buff-modal-hint" id="tm-buff-modal-hint"></div>
+            <div class="tm-buff-modal-actions">
+                <button type="button" class="tm-buff-modal-btn" id="tm-buff-modal-cancel">Cancel</button>
+                <button type="button" class="tm-buff-modal-btn primary" id="tm-buff-modal-save">Save</button>
             </div>
         `;
-
-        document.body.appendChild(backdrop);
+        const backdrop = createStandardModalBackdrop({
+            backdropId: 'tm-buff-item-modal-backdrop',
+            modalId: 'tm-buff-item-modal',
+            title: 'Item settings',
+            closeId: 'tm-buff-modal-close',
+            bodyHtml,
+        });
+        if (backdrop.dataset.tmBuffBound === '1') return backdrop;
+        backdrop.dataset.tmBuffBound = '1';
 
         backdrop.addEventListener('click', (event) => {
             if (event.target === backdrop) {
@@ -782,7 +841,7 @@
         const excluded = isAssetExcluded(assetId);
         const ready = Number.isFinite(marketPriceEur) && Number.isFinite(target) && marketPriceEur >= target;
 
-        const titleEl = modal.querySelector('#tm-buff-modal-title');
+        const titleEl = modal.querySelector('.tm-buff-modal-title');
         const paidEl = modal.querySelector('#tm-buff-modal-paid-eur');
         const targetEl = modal.querySelector('#tm-buff-modal-target');
         const excludedEl = modal.querySelector('#tm-buff-modal-excluded');
@@ -804,6 +863,90 @@
         }
 
         modal.style.display = 'flex';
+    }
+
+    function closeGlobalSettingsModal() {
+        const backdrop = document.getElementById('tm-buff-global-settings-backdrop');
+        if (!backdrop) return;
+        backdrop.style.display = 'none';
+    }
+
+    function getOrCreateGlobalSettingsModal() {
+        const bodyHtml = `
+            <div class="tm-buff-modal-row">
+                <label class="tm-buff-modal-check">
+                    <input id="tm-buff-global-only-saleable" type="checkbox">
+                    Only saleable
+                </label>
+            </div>
+            <div class="tm-buff-modal-row">
+                <label class="tm-buff-modal-check">
+                    <input id="tm-buff-global-show-refs" type="checkbox">
+                    Show refs
+                </label>
+            </div>
+            <div class="tm-buff-modal-hint">More options can be moved here later.</div>
+            <div class="tm-buff-modal-actions">
+                <button type="button" class="tm-buff-modal-btn primary" id="tm-buff-global-settings-save">Save</button>
+            </div>
+        `;
+        const backdrop = createStandardModalBackdrop({
+            backdropId: 'tm-buff-global-settings-backdrop',
+            modalId: 'tm-buff-global-settings-modal',
+            title: 'buff163-tools settings',
+            closeId: 'tm-buff-global-settings-close',
+            bodyHtml,
+        });
+        if (backdrop.dataset.tmBuffBound === '1') return backdrop;
+        backdrop.dataset.tmBuffBound = '1';
+
+        backdrop.addEventListener('click', (event) => {
+            if (event.target === backdrop) closeGlobalSettingsModal();
+        });
+        backdrop.querySelector('#tm-buff-global-settings-close')?.addEventListener('click', closeGlobalSettingsModal);
+
+        backdrop.querySelector('#tm-buff-global-settings-save')?.addEventListener('click', () => {
+            const onlySaleableInput = backdrop.querySelector('#tm-buff-global-only-saleable');
+            const showRefsInput = backdrop.querySelector('#tm-buff-global-show-refs');
+            setOnlySaleableEnabled(!!onlySaleableInput?.checked);
+            setShowRefsEnabled(!!showRefsInput?.checked);
+            closeGlobalSettingsModal();
+            refreshUiAndPl();
+        });
+
+        return backdrop;
+    }
+
+    function openGlobalSettingsModal() {
+        const modal = getOrCreateGlobalSettingsModal();
+        const onlySaleableInput = modal.querySelector('#tm-buff-global-only-saleable');
+        const showRefsInput = modal.querySelector('#tm-buff-global-show-refs');
+        if (onlySaleableInput) onlySaleableInput.checked = isOnlySaleableEnabled();
+        if (showRefsInput) showRefsInput.checked = isShowRefsEnabled();
+        modal.style.display = 'flex';
+    }
+
+    function getOrCreateFloatbarEntry() {
+        const floatbarList = document.querySelector('.floatbar > ul');
+        if (!floatbarList) return;
+
+        let existing = document.getElementById('tm-buff-float-settings');
+        if (existing) return;
+
+        const li = document.createElement('li');
+        li.id = 'tm-buff-float-settings';
+        li.innerHTML = `
+            <a href="javascript:void(0)">
+                <i class="icon icon_menu icon_menu_setting" aria-hidden="true"></i>
+                <p>Tools</p>
+            </a>
+        `;
+        li.querySelector('a')?.addEventListener('click', (event) => {
+            event.preventDefault();
+            openGlobalSettingsModal();
+        });
+
+        floatbarList.insertBefore(li, floatbarList.firstChild);
     }
 
     function isFullInventoryMode() {
@@ -1692,6 +1835,7 @@
     }
 
     function refreshUiAndPl() {
+        getOrCreateFloatbarEntry();
         getOrCreateToolbar();
         syncToolbarState();
         enforceOnlySaleableIfNeeded();
