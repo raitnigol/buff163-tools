@@ -1589,48 +1589,6 @@
         title.className = 'tm-buff-toolbar-title';
         title.textContent = 'buff163-tools';
 
-        const saleableLabel = document.createElement('label');
-        saleableLabel.className = 'tm-buff-toolbar-option';
-
-        const saleableCheckbox = document.createElement('input');
-        saleableCheckbox.type = 'checkbox';
-        saleableCheckbox.id = 'tm-buff-only-saleable';
-        saleableCheckbox.checked = isOnlySaleableEnabled();
-        saleableCheckbox.addEventListener('change', () => {
-            handleOnlySaleableChange(saleableCheckbox.checked);
-        });
-
-        const saleableText = document.createElement('span');
-        saleableText.textContent = 'Only saleable';
-
-        saleableLabel.appendChild(saleableCheckbox);
-        saleableLabel.appendChild(saleableText);
-
-        const refsLabel = document.createElement('label');
-        refsLabel.className = 'tm-buff-toolbar-option';
-
-        const refsCheckbox = document.createElement('input');
-        refsCheckbox.type = 'checkbox';
-        refsCheckbox.id = 'tm-buff-show-refs';
-        refsCheckbox.checked = isShowRefsEnabled();
-        refsCheckbox.addEventListener('change', () => {
-            setShowRefsEnabled(refsCheckbox.checked);
-            // Force re-render of meta refs line on current page
-            const rate = getCachedCnyEurRate();
-            if (rate) {
-                renderPaidEurValues(rate);
-                applyPlFilterAndSummary();
-            } else {
-                initPaidEurFeature();
-            }
-        });
-
-        const refsText = document.createElement('span');
-        refsText.textContent = 'Show refs';
-
-        refsLabel.appendChild(refsCheckbox);
-        refsLabel.appendChild(refsText);
-
         const plFilterWrap = document.createElement('label');
         plFilterWrap.className = 'tm-buff-toolbar-option';
 
@@ -1669,8 +1627,6 @@
         fxInfo.textContent = 'FX: not loaded';
 
         toolbar.appendChild(title);
-        toolbar.appendChild(saleableLabel);
-        toolbar.appendChild(refsLabel);
         toolbar.appendChild(plFilterWrap);
         toolbar.appendChild(summary);
         toolbar.appendChild(fxInfo);
@@ -1680,16 +1636,6 @@
     }
 
     function syncToolbarState() {
-        const saleableCheckbox = document.getElementById('tm-buff-only-saleable');
-        if (saleableCheckbox) {
-            saleableCheckbox.checked = isOnlySaleableEnabled();
-        }
-
-        const refsCheckbox = document.getElementById('tm-buff-show-refs');
-        if (refsCheckbox) {
-            refsCheckbox.checked = isShowRefsEnabled();
-        }
-
         const plFilterSelect = document.getElementById('tm-buff-pl-filter');
         if (plFilterSelect) {
             plFilterSelect.value = getPlFilter();
