@@ -278,6 +278,13 @@
                 background: #f1f5f9;
             }
 
+            /* Merged/folder entries should not expose per-item management UI */
+            #j_list_card li.my_inventory.card_folder .tm-buff-exclude-toggle,
+            #j_list_card li.my_inventory.card_folder .tm-buff-item-settings-btn,
+            #j_list_card li.my_inventory.card_folder .tm-buff-target-status {
+                display: none !important;
+            }
+
             #tm-buff-item-modal-backdrop {
                 position: fixed;
                 inset: 0;
@@ -1148,6 +1155,9 @@
             const goodsInfo = parseJsonAttribute(item, 'data-goods-info') || {};
             const itemInfo = parseJsonAttribute(item, 'data-item-info') || {};
             const excluded = isAssetExcluded(assetId);
+            const isMergedItem =
+                item.classList.contains('card_folder') ||
+                !!item.querySelector('.fold_asset_count[data-fold_asset_count]');
             item.dataset.tmBuffExcluded = excluded ? '1' : '0';
             item.classList.toggle('tm-buff-item-excluded', excluded);
 
@@ -1181,13 +1191,13 @@
                     `<span class="tm-buff-meta-value">${summaryText}</span>`;
 
                 actionsLine.innerHTML =
-                    (assetId && targetStatusText
+                    (!isMergedItem && assetId && targetStatusText
                         ? `<span class="tm-buff-target-status ${targetStatusClass.includes('ready') ? 'ready' : ''}">${targetStatusText}</span>`
                         : '') +
-                    (assetId
+                    (!isMergedItem && assetId
                         ? `<span class="tm-buff-exclude-toggle readonly${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Excluded from totals' : 'Included in totals'}">${excluded ? 'Excluded' : 'Included'}</span>`
                         : '') +
-                    (assetId
+                    (!isMergedItem && assetId
                         ? `<button type="button" class="tm-buff-item-settings-btn" title="Open item settings">⚙</button>`
                         : '');
 
@@ -1209,13 +1219,13 @@
                 const targetStatusText = targetSellEur ? (isReadyToSell ? 'Ready' : 'Waiting') : '';
                 refsLine.innerHTML = '&nbsp;';
                 actionsLine.innerHTML =
-                    (assetId && targetStatusText
+                    (!isMergedItem && assetId && targetStatusText
                         ? `<span class="tm-buff-target-status ${targetStatusClass.includes('ready') ? 'ready' : ''}">${targetStatusText}</span>`
                         : '') +
-                    (assetId
+                    (!isMergedItem && assetId
                         ? `<span class="tm-buff-exclude-toggle readonly${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Excluded from totals' : 'Included in totals'}">${excluded ? 'Excluded' : 'Included'}</span>`
                         : '') +
-                    (assetId
+                    (!isMergedItem && assetId
                         ? `<button type="button" class="tm-buff-item-settings-btn" title="Open item settings">⚙</button>`
                         : '&nbsp;');
                 refsLine.removeAttribute('title');
@@ -1223,7 +1233,7 @@
             }
 
             const settingsBtn = actionsLine.querySelector('.tm-buff-item-settings-btn');
-            if (settingsBtn) {
+            if (settingsBtn && !isMergedItem) {
                 settingsBtn.addEventListener('click', (event) => {
                     event.preventDefault();
                     event.stopPropagation();
