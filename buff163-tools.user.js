@@ -63,6 +63,13 @@
                     targetSellEurByAssetId: parsed.targetSellEurByAssetId && typeof parsed.targetSellEurByAssetId === 'object'
                         ? parsed.targetSellEurByAssetId
                         : {},
+                    customPaidEurByAssetId: parsed.customPaidEurByAssetId && typeof parsed.customPaidEurByAssetId === 'object'
+                        ? parsed.customPaidEurByAssetId
+                        : {},
+                    // Legacy fallback for migration
+                    customPaidCnyByAssetId: parsed.customPaidCnyByAssetId && typeof parsed.customPaidCnyByAssetId === 'object'
+                        ? parsed.customPaidCnyByAssetId
+                        : {},
                 };
             }
         } catch (err) {
@@ -79,6 +86,8 @@
             fullMode: fullModeLegacy !== null ? fullModeLegacy === '1' : false,
             excludedAssetIds: {},
             targetSellEurByAssetId: {},
+            customPaidEurByAssetId: {},
+            customPaidCnyByAssetId: {},
         };
     }
 
@@ -156,6 +165,10 @@
                 font-weight: 500;
             }
 
+            #j_list_card li.my_inventory .tm-buff-meta-paid-custom .tm-buff-meta-value {
+                color: #0369a1;
+            }
+
             #j_list_card li.my_inventory .tm-buff-meta-line.pl-positive .tm-buff-meta-value {
                 color: #22c55e;
             }
@@ -186,6 +199,12 @@
                 text-decoration: none;
                 box-sizing: border-box;
                 vertical-align: middle;
+            }
+
+            #j_list_card li.my_inventory .tm-buff-exclude-toggle.readonly {
+                cursor: default;
+                text-decoration: none;
+                pointer-events: none;
             }
 
             #j_list_card li.my_inventory.tm-buff-item-excluded {
@@ -625,6 +644,35 @@
         saveSettings();
     }
 
+    function getAssetCustomPaidEur(assetId) {
+        if (!assetId) return null;
+        const value = SETTINGS.customPaidEurByAssetId?.[assetId];
+        const parsed = parseFloat(value);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    }
+
+    function getAssetLegacyCustomPaidCny(assetId) {
+        if (!assetId) return null;
+        const value = SETTINGS.customPaidCnyByAssetId?.[assetId];
+        const parsed = parseFloat(value);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    }
+
+    function setAssetCustomPaidEur(assetId, value) {
+        if (!assetId) return;
+        if (!SETTINGS.customPaidEurByAssetId || typeof SETTINGS.customPaidEurByAssetId !== 'object') {
+            SETTINGS.customPaidEurByAssetId = {};
+        }
+
+        const parsed = parseFloat(value);
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+            delete SETTINGS.customPaidEurByAssetId[assetId];
+        } else {
+            SETTINGS.customPaidEurByAssetId[assetId] = parsed.toFixed(2);
+        }
+        saveSettings();
+    }
+
     function closeItemSettingsModal() {
         const backdrop = document.getElementById('tm-buff-item-modal-backdrop');
         if (!backdrop) return;
@@ -645,6 +693,10 @@
                     <button type="button" class="tm-buff-modal-close" id="tm-buff-modal-close" aria-label="Close">×</button>
                 </div>
                 <div class="tm-buff-modal-body">
+                    <div class="tm-buff-modal-row">
+                        <label for="tm-buff-modal-paid-eur">Custom paid price (EUR)</label>
+                        <input id="tm-buff-modal-paid-eur" class="tm-buff-modal-input" type="number" min="0" step="0.01" placeholder="Leave empty to use BUFF paid">
+                    </div>
                     <div class="tm-buff-modal-row">
                         <label for="tm-buff-modal-target">Target sell price (EUR)</label>
                         <input id="tm-buff-modal-target" class="tm-buff-modal-input" type="number" min="0" step="0.01" placeholder="Leave empty to disable">
@@ -679,11 +731,14 @@
             if (!assetId) return;
 
             const targetInput = backdrop.querySelector('#tm-buff-modal-target');
+            const paidInput = backdrop.querySelector('#tm-buff-modal-paid-eur');
             const excludedInput = backdrop.querySelector('#tm-buff-modal-excluded');
             const targetValue = targetInput ? targetInput.value : '';
+            const paidValue = paidInput ? paidInput.value : '';
             const excluded = !!(excludedInput && excludedInput.checked);
 
             setAssetTargetSellEur(assetId, targetValue);
+            setAssetCustomPaidEur(assetId, paidValue);
             setAssetExcluded(assetId, excluded);
 
             closeItemSettingsModal();
@@ -709,21 +764,30 @@
 
         const name = item.querySelector('h3 a')?.textContent?.trim() || 'Item settings';
         const target = getAssetTargetSellEur(assetId);
+        const customPaidEur = getAssetCustomPaidEur(assetId);
+        const customPaidCnyLegacy = getAssetLegacyCustomPaidCny(assetId);
         const excluded = isAssetExcluded(assetId);
         const ready = Number.isFinite(marketPriceEur) && Number.isFinite(target) && marketPriceEur >= target;
 
         const titleEl = modal.querySelector('#tm-buff-modal-title');
+        const paidEl = modal.querySelector('#tm-buff-modal-paid-eur');
         const targetEl = modal.querySelector('#tm-buff-modal-target');
         const excludedEl = modal.querySelector('#tm-buff-modal-excluded');
         const hintEl = modal.querySelector('#tm-buff-modal-hint');
 
         if (titleEl) titleEl.textContent = name;
+        if (paidEl) paidEl.value = customPaidEur ? customPaidEur.toFixed(2) : '';
         if (targetEl) targetEl.value = target ? target.toFixed(2) : '';
         if (excludedEl) excludedEl.checked = excluded;
         if (hintEl) {
             const currentText = Number.isFinite(marketPriceEur) ? `Current: ${formatEur(marketPriceEur)}` : 'Current: N/A';
             const statusText = target ? (ready ? 'Status: Ready' : 'Status: Waiting') : 'Status: No target set';
-            hintEl.textContent = `${currentText} · ${statusText}`;
+            const paidSource = customPaidEur
+                ? `Paid source: Custom EUR (${formatEur(customPaidEur)})`
+                : customPaidCnyLegacy
+                    ? `Paid source: Legacy custom CNY (¥ ${customPaidCnyLegacy.toFixed(2)})`
+                    : 'Paid source: BUFF';
+            hintEl.textContent = `${currentText} · ${statusText} · ${paidSource}`;
         }
 
         modal.style.display = 'flex';
@@ -1068,7 +1132,13 @@
 
             if (!paidLine || !plLine || !refsLine || !actionsLine) return;
 
-            const buyPriceCny = getBuyPriceCnyFromItem(item);
+            const assetId = getAssetIdFromItem(item);
+            const customPaidEur = getAssetCustomPaidEur(assetId);
+            const legacyCustomPaidCny = getAssetLegacyCustomPaidCny(assetId);
+            const buffPaidCny = getBuyPriceCnyFromItem(item);
+            const isCustomPaidEur = Number.isFinite(customPaidEur) && customPaidEur > 0;
+            const isCustomPaidCnyLegacy = !isCustomPaidEur && Number.isFinite(legacyCustomPaidCny) && legacyCustomPaidCny > 0;
+            const isCustomPaid = isCustomPaidEur || isCustomPaidCnyLegacy;
             const marketPriceEur = getMarketPriceEurFromItem(item);
 
             plLine.classList.remove('pl-positive', 'pl-negative');
@@ -1077,7 +1147,6 @@
             // References: BUFF listing / floor and Steam prices
             const goodsInfo = parseJsonAttribute(item, 'data-goods-info') || {};
             const itemInfo = parseJsonAttribute(item, 'data-item-info') || {};
-            const assetId = getAssetIdFromItem(item);
             const excluded = isAssetExcluded(assetId);
             item.dataset.tmBuffExcluded = excluded ? '1' : '0';
             item.classList.toggle('tm-buff-item-excluded', excluded);
@@ -1116,7 +1185,7 @@
                         ? `<span class="tm-buff-target-status ${targetStatusClass.includes('ready') ? 'ready' : ''}">${targetStatusText}</span>`
                         : '') +
                     (assetId
-                        ? `<a href="javascript:void(0)" class="tm-buff-exclude-toggle${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Excluded from totals' : 'Included in totals'}">${excluded ? 'Excluded' : 'Included'}</a>`
+                        ? `<span class="tm-buff-exclude-toggle readonly${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Excluded from totals' : 'Included in totals'}">${excluded ? 'Excluded' : 'Included'}</span>`
                         : '') +
                     (assetId
                         ? `<button type="button" class="tm-buff-item-settings-btn" title="Open item settings">⚙</button>`
@@ -1144,32 +1213,13 @@
                         ? `<span class="tm-buff-target-status ${targetStatusClass.includes('ready') ? 'ready' : ''}">${targetStatusText}</span>`
                         : '') +
                     (assetId
-                        ? `<a href="javascript:void(0)" class="tm-buff-exclude-toggle${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Excluded from totals' : 'Included in totals'}">${excluded ? 'Excluded' : 'Included'}</a>`
+                        ? `<span class="tm-buff-exclude-toggle readonly${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Excluded from totals' : 'Included in totals'}">${excluded ? 'Excluded' : 'Included'}</span>`
                         : '') +
                     (assetId
                         ? `<button type="button" class="tm-buff-item-settings-btn" title="Open item settings">⚙</button>`
                         : '&nbsp;');
                 refsLine.removeAttribute('title');
                 actionsLine.removeAttribute('title');
-            }
-
-            const excludeToggle = actionsLine.querySelector('.tm-buff-exclude-toggle');
-            if (excludeToggle && assetId) {
-                excludeToggle.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const nextExcluded = !isAssetExcluded(assetId);
-                    setAssetExcluded(assetId, nextExcluded);
-                    item.dataset.tmBuffExcluded = nextExcluded ? '1' : '0';
-                    item.classList.toggle('tm-buff-item-excluded', nextExcluded);
-                    const currentRate = getCachedCnyEurRate();
-                    if (currentRate) {
-                        renderPaidEurValues(currentRate, true);
-                        applyPlFilterAndSummary();
-                    } else {
-                        initPaidEurFeature();
-                    }
-                });
             }
 
             const settingsBtn = actionsLine.querySelector('.tm-buff-item-settings-btn');
@@ -1181,21 +1231,28 @@
                 });
             }
 
-            if (!buyPriceCny) {
+            if (!buffPaidCny && !isCustomPaid) {
                 paidLine.innerHTML = '&nbsp;';
                 plLine.innerHTML = '&nbsp;';
                 paidLine.removeAttribute('title');
                 plLine.removeAttribute('title');
+                paidLine.classList.remove('tm-buff-meta-paid-custom');
                 return;
             }
 
-            const paidEur = buyPriceCny * rate;
+            const paidEur = isCustomPaidEur
+                ? customPaidEur
+                : (isCustomPaidCnyLegacy ? legacyCustomPaidCny * rate : buffPaidCny * rate);
+            const paidCnyForTooltip = isCustomPaidEur
+                ? (Number.isFinite(rate) && rate > 0 ? (customPaidEur / rate) : null)
+                : (isCustomPaidCnyLegacy ? legacyCustomPaidCny : buffPaidCny);
+            paidLine.classList.toggle('tm-buff-meta-paid-custom', isCustomPaid);
             paidLine.innerHTML =
-                `<span class="tm-buff-meta-label">Paid:</span>` +
+                `<span class="tm-buff-meta-label">${isCustomPaid ? 'Paid*:' : 'Paid:'}</span>` +
                 `<span class="tm-buff-meta-value">${formatEur(paidEur)}</span>`;
             paidLine.title = rateDate
-                ? `Buy price: ¥ ${buyPriceCny.toFixed(2)} · ${paidEur.toFixed(2)} EUR · Rate date: ${rateDate}`
-                : `Buy price: ¥ ${buyPriceCny.toFixed(2)} · ${paidEur.toFixed(2)} EUR`;
+                ? `${isCustomPaid ? 'Custom paid' : 'Buy price'}: ${paidCnyForTooltip !== null ? `¥ ${paidCnyForTooltip.toFixed(2)} · ` : ''}${paidEur.toFixed(2)} EUR · Rate date: ${rateDate}`
+                : `${isCustomPaid ? 'Custom paid' : 'Buy price'}: ${paidCnyForTooltip !== null ? `¥ ${paidCnyForTooltip.toFixed(2)} · ` : ''}${paidEur.toFixed(2)} EUR`;
 
             if (!Number.isFinite(marketPriceEur)) {
                 plLine.innerHTML = '&nbsp;';
