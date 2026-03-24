@@ -238,6 +238,131 @@
                 font-weight: 600;
             }
 
+            #j_list_card li.my_inventory .tm-buff-item-settings-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 18px;
+                height: 18px;
+                margin-left: 8px;
+                border: 1px solid #d1d5db;
+                border-radius: 4px;
+                color: #4b5563;
+                background: #f8fafc;
+                cursor: pointer;
+                font-size: 12px;
+                line-height: 1;
+            }
+
+            #j_list_card li.my_inventory .tm-buff-item-settings-btn:hover {
+                border-color: #9ca3af;
+                background: #f1f5f9;
+            }
+
+            #tm-buff-item-modal-backdrop {
+                position: fixed;
+                inset: 0;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                background: rgba(15, 23, 42, 0.45);
+                z-index: 99999;
+            }
+
+            #tm-buff-item-modal {
+                width: 360px;
+                max-width: calc(100vw - 24px);
+                border-radius: 8px;
+                border: 1px solid #d1d5db;
+                background: #ffffff;
+                box-shadow: 0 10px 32px rgba(0, 0, 0, 0.22);
+                color: #111827;
+                font-size: 13px;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 12px;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-title {
+                font-weight: 600;
+                max-width: 300px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-close {
+                border: none;
+                background: transparent;
+                color: #6b7280;
+                font-size: 18px;
+                cursor: pointer;
+                line-height: 1;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-body {
+                padding: 12px;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-row {
+                margin-bottom: 10px;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-row label {
+                display: block;
+                margin-bottom: 4px;
+                color: #4b5563;
+                font-size: 12px;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-input {
+                width: 100%;
+                height: 30px;
+                padding: 0 8px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                box-sizing: border-box;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-check {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-hint {
+                color: #6b7280;
+                font-size: 12px;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                margin-top: 12px;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-btn {
+                height: 30px;
+                padding: 0 12px;
+                border-radius: 6px;
+                border: 1px solid #d1d5db;
+                background: #ffffff;
+                cursor: pointer;
+            }
+
+            #tm-buff-item-modal .tm-buff-modal-btn.primary {
+                border-color: #3b82f6;
+                background: #3b82f6;
+                color: #ffffff;
+            }
+
             #tm-buff-toolbar {
                 display: flex;
                 align-items: center;
@@ -498,6 +623,110 @@
             SETTINGS.targetSellEurByAssetId[assetId] = parsed.toFixed(2);
         }
         saveSettings();
+    }
+
+    function closeItemSettingsModal() {
+        const backdrop = document.getElementById('tm-buff-item-modal-backdrop');
+        if (!backdrop) return;
+        backdrop.style.display = 'none';
+        backdrop.dataset.assetId = '';
+    }
+
+    function getOrCreateItemSettingsModal() {
+        let backdrop = document.getElementById('tm-buff-item-modal-backdrop');
+        if (backdrop) return backdrop;
+
+        backdrop = document.createElement('div');
+        backdrop.id = 'tm-buff-item-modal-backdrop';
+        backdrop.innerHTML = `
+            <div id="tm-buff-item-modal">
+                <div class="tm-buff-modal-header">
+                    <div class="tm-buff-modal-title" id="tm-buff-modal-title">Item settings</div>
+                    <button type="button" class="tm-buff-modal-close" id="tm-buff-modal-close" aria-label="Close">×</button>
+                </div>
+                <div class="tm-buff-modal-body">
+                    <div class="tm-buff-modal-row">
+                        <label for="tm-buff-modal-target">Target sell price (EUR)</label>
+                        <input id="tm-buff-modal-target" class="tm-buff-modal-input" type="number" min="0" step="0.01" placeholder="Leave empty to disable">
+                    </div>
+                    <div class="tm-buff-modal-row">
+                        <label class="tm-buff-modal-check">
+                            <input id="tm-buff-modal-excluded" type="checkbox">
+                            Exclude from portfolio totals
+                        </label>
+                    </div>
+                    <div class="tm-buff-modal-hint" id="tm-buff-modal-hint"></div>
+                    <div class="tm-buff-modal-actions">
+                        <button type="button" class="tm-buff-modal-btn" id="tm-buff-modal-cancel">Cancel</button>
+                        <button type="button" class="tm-buff-modal-btn primary" id="tm-buff-modal-save">Save</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(backdrop);
+
+        backdrop.addEventListener('click', (event) => {
+            if (event.target === backdrop) {
+                closeItemSettingsModal();
+            }
+        });
+        backdrop.querySelector('#tm-buff-modal-close')?.addEventListener('click', closeItemSettingsModal);
+        backdrop.querySelector('#tm-buff-modal-cancel')?.addEventListener('click', closeItemSettingsModal);
+
+        backdrop.querySelector('#tm-buff-modal-save')?.addEventListener('click', () => {
+            const assetId = backdrop.dataset.assetId || '';
+            if (!assetId) return;
+
+            const targetInput = backdrop.querySelector('#tm-buff-modal-target');
+            const excludedInput = backdrop.querySelector('#tm-buff-modal-excluded');
+            const targetValue = targetInput ? targetInput.value : '';
+            const excluded = !!(excludedInput && excludedInput.checked);
+
+            setAssetTargetSellEur(assetId, targetValue);
+            setAssetExcluded(assetId, excluded);
+
+            closeItemSettingsModal();
+
+            const currentRate = getCachedCnyEurRate();
+            if (currentRate) {
+                renderPaidEurValues(currentRate, true);
+                applyPlFilterAndSummary();
+            } else {
+                initPaidEurFeature();
+            }
+        });
+
+        return backdrop;
+    }
+
+    function openItemSettingsModal(item, marketPriceEur) {
+        const assetId = getAssetIdFromItem(item);
+        if (!assetId) return;
+
+        const modal = getOrCreateItemSettingsModal();
+        modal.dataset.assetId = assetId;
+
+        const name = item.querySelector('h3 a')?.textContent?.trim() || 'Item settings';
+        const target = getAssetTargetSellEur(assetId);
+        const excluded = isAssetExcluded(assetId);
+        const ready = Number.isFinite(marketPriceEur) && Number.isFinite(target) && marketPriceEur >= target;
+
+        const titleEl = modal.querySelector('#tm-buff-modal-title');
+        const targetEl = modal.querySelector('#tm-buff-modal-target');
+        const excludedEl = modal.querySelector('#tm-buff-modal-excluded');
+        const hintEl = modal.querySelector('#tm-buff-modal-hint');
+
+        if (titleEl) titleEl.textContent = name;
+        if (targetEl) targetEl.value = target ? target.toFixed(2) : '';
+        if (excludedEl) excludedEl.checked = excluded;
+        if (hintEl) {
+            const currentText = Number.isFinite(marketPriceEur) ? `Current: ${formatEur(marketPriceEur)}` : 'Current: N/A';
+            const statusText = target ? (ready ? 'Status: Ready' : 'Status: Waiting') : 'Status: No target set';
+            hintEl.textContent = `${currentText} · ${statusText}`;
+        }
+
+        modal.style.display = 'flex';
     }
 
     function isFullInventoryMode() {
@@ -883,11 +1112,14 @@
                     `<span class="tm-buff-meta-value">${summaryText}</span>`;
 
                 actionsLine.innerHTML =
-                    (assetId
-                        ? `<span class="tm-buff-target-wrap"><span class="tm-buff-meta-label">Target €</span><input class="tm-buff-target-input" type="number" min="0" step="0.01" value="${targetSellEur ? targetSellEur.toFixed(2) : ''}" placeholder="--"><span class="${targetStatusClass}">${targetStatusText}</span></span>`
+                    (assetId && targetStatusText
+                        ? `<span class="tm-buff-target-status ${targetStatusClass.includes('ready') ? 'ready' : ''}">${targetStatusText}</span>`
                         : '') +
                     (assetId
-                        ? `<a href="javascript:void(0)" class="tm-buff-exclude-toggle${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Click to include in totals' : 'Click to exclude from totals'}">${excluded ? 'Excluded' : 'Included'}</a>`
+                        ? `<a href="javascript:void(0)" class="tm-buff-exclude-toggle${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Excluded from totals' : 'Included in totals'}">${excluded ? 'Excluded' : 'Included'}</a>`
+                        : '') +
+                    (assetId
+                        ? `<button type="button" class="tm-buff-item-settings-btn" title="Open item settings">⚙</button>`
                         : '');
 
                 const fullParts = [];
@@ -908,36 +1140,17 @@
                 const targetStatusText = targetSellEur ? (isReadyToSell ? 'Ready' : 'Waiting') : '';
                 refsLine.innerHTML = '&nbsp;';
                 actionsLine.innerHTML =
-                    (assetId
-                        ? `<span class="tm-buff-target-wrap"><span class="tm-buff-meta-label">Target €</span><input class="tm-buff-target-input" type="number" min="0" step="0.01" value="${targetSellEur ? targetSellEur.toFixed(2) : ''}" placeholder="--"><span class="${targetStatusClass}">${targetStatusText}</span></span>`
+                    (assetId && targetStatusText
+                        ? `<span class="tm-buff-target-status ${targetStatusClass.includes('ready') ? 'ready' : ''}">${targetStatusText}</span>`
                         : '') +
                     (assetId
-                        ? `<a href="javascript:void(0)" class="tm-buff-exclude-toggle${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Click to include in totals' : 'Click to exclude from totals'}">${excluded ? 'Excluded' : 'Included'}</a>`
+                        ? `<a href="javascript:void(0)" class="tm-buff-exclude-toggle${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Excluded from totals' : 'Included in totals'}">${excluded ? 'Excluded' : 'Included'}</a>`
+                        : '') +
+                    (assetId
+                        ? `<button type="button" class="tm-buff-item-settings-btn" title="Open item settings">⚙</button>`
                         : '&nbsp;');
                 refsLine.removeAttribute('title');
                 actionsLine.removeAttribute('title');
-            }
-
-            const targetInput = actionsLine.querySelector('.tm-buff-target-input');
-            if (targetInput && assetId) {
-                const applyTarget = () => {
-                    setAssetTargetSellEur(assetId, targetInput.value);
-                    const currentRate = getCachedCnyEurRate();
-                    if (currentRate) {
-                        renderPaidEurValues(currentRate, true);
-                        applyPlFilterAndSummary();
-                    } else {
-                        initPaidEurFeature();
-                    }
-                };
-                targetInput.addEventListener('change', applyTarget);
-                targetInput.addEventListener('blur', applyTarget);
-                targetInput.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter') {
-                        event.preventDefault();
-                        applyTarget();
-                    }
-                });
             }
 
             const excludeToggle = actionsLine.querySelector('.tm-buff-exclude-toggle');
@@ -956,6 +1169,15 @@
                     } else {
                         initPaidEurFeature();
                     }
+                });
+            }
+
+            const settingsBtn = actionsLine.querySelector('.tm-buff-item-settings-btn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    openItemSettingsModal(item, marketPriceEur);
                 });
             }
 
