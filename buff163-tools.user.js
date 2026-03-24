@@ -278,6 +278,12 @@
                 background: #f1f5f9;
             }
 
+            #j_list_card li.my_inventory .tm-buff-merged-note {
+                font-size: 10px;
+                color: #9ca3af;
+                font-style: italic;
+            }
+
             /* Merged/folder entries should not expose per-item management UI */
             #j_list_card li.my_inventory.card_folder .tm-buff-exclude-toggle,
             #j_list_card li.my_inventory.card_folder .tm-buff-item-settings-btn,
@@ -1199,7 +1205,7 @@
                         : '') +
                     (!isMergedItem && assetId
                         ? `<button type="button" class="tm-buff-item-settings-btn" title="Open item settings">⚙</button>`
-                        : '');
+                        : (isMergedItem ? `<span class="tm-buff-merged-note">Merged stack (settings unavailable)</span>` : ''));
 
                 const fullParts = [];
                 if (listingCny) fullParts.push(`BUFF listing: ¥ ${listingCny.toFixed(2)}`);
@@ -1227,7 +1233,7 @@
                         : '') +
                     (!isMergedItem && assetId
                         ? `<button type="button" class="tm-buff-item-settings-btn" title="Open item settings">⚙</button>`
-                        : '&nbsp;');
+                        : (isMergedItem ? `<span class="tm-buff-merged-note">Merged stack (settings unavailable)</span>` : '&nbsp;'));
                 refsLine.removeAttribute('title');
                 actionsLine.removeAttribute('title');
             }
