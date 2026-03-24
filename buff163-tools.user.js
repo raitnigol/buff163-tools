@@ -60,6 +60,9 @@
                     excludedAssetIds: parsed.excludedAssetIds && typeof parsed.excludedAssetIds === 'object'
                         ? parsed.excludedAssetIds
                         : {},
+                    targetSellEurByAssetId: parsed.targetSellEurByAssetId && typeof parsed.targetSellEurByAssetId === 'object'
+                        ? parsed.targetSellEurByAssetId
+                        : {},
                 };
             }
         } catch (err) {
@@ -75,6 +78,7 @@
             showRefs: showRefsLegacy !== null ? showRefsLegacy === '1' : true,
             fullMode: fullModeLegacy !== null ? fullModeLegacy === '1' : false,
             excludedAssetIds: {},
+            targetSellEurByAssetId: {},
         };
     }
 
@@ -93,8 +97,8 @@
 
         const sampleCard = document.querySelector(SELECTORS.inventoryItems);
         const baseHeight = sampleCard ? Math.ceil(sampleCard.getBoundingClientRect().height) : 260;
-        // Paid + P/L (14px each) + refs row (20px)
-        const finalHeight = baseHeight + 48;
+        // Paid + P/L + refs + actions
+        const finalHeight = baseHeight + 62;
 
         const style = document.createElement('style');
         style.id = 'tm-buff-styles';
@@ -107,7 +111,7 @@
 
             #j_list_card li.my_inventory .tm-buff-meta {
                 display: block;
-                height: 48px;
+                height: 62px;
                 margin: 2px 10px 0;
                 overflow: hidden;
             }
@@ -124,6 +128,12 @@
             }
 
             #j_list_card li.my_inventory .tm-buff-meta-line.tm-buff-meta-refs {
+                height: 14px;
+                line-height: 14px;
+                overflow: visible;
+            }
+
+            #j_list_card li.my_inventory .tm-buff-meta-line.tm-buff-meta-actions {
                 height: 20px;
                 line-height: 20px;
                 overflow: visible;
@@ -183,6 +193,11 @@
                 box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.22);
             }
 
+            #j_list_card li.my_inventory.tm-buff-item-ready {
+                border: 1px solid #22c55e !important;
+                box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.22);
+            }
+
             #j_list_card li.my_inventory.tm-buff-item-excluded .tm-buff-meta-pl {
                 opacity: 0.55;
             }
@@ -191,6 +206,35 @@
                 color: #5b21b6;
                 border-color: #c4b5fd;
                 background: #f5f3ff;
+                font-weight: 600;
+            }
+
+            #j_list_card li.my_inventory .tm-buff-target-wrap {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                margin-right: 8px;
+                vertical-align: middle;
+            }
+
+            #j_list_card li.my_inventory .tm-buff-target-input {
+                width: 58px;
+                height: 16px;
+                line-height: 16px;
+                padding: 0 4px;
+                border: 1px solid #d1d5db;
+                border-radius: 3px;
+                font-size: 10px;
+                box-sizing: border-box;
+            }
+
+            #j_list_card li.my_inventory .tm-buff-target-status {
+                font-size: 10px;
+                color: #6b7280;
+            }
+
+            #j_list_card li.my_inventory .tm-buff-target-status.ready {
+                color: #16a34a;
                 font-weight: 600;
             }
 
@@ -430,6 +474,28 @@
             SETTINGS.excludedAssetIds[assetId] = 1;
         } else {
             delete SETTINGS.excludedAssetIds[assetId];
+        }
+        saveSettings();
+    }
+
+    function getAssetTargetSellEur(assetId) {
+        if (!assetId) return null;
+        const value = SETTINGS.targetSellEurByAssetId?.[assetId];
+        const parsed = parseFloat(value);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    }
+
+    function setAssetTargetSellEur(assetId, value) {
+        if (!assetId) return;
+        if (!SETTINGS.targetSellEurByAssetId || typeof SETTINGS.targetSellEurByAssetId !== 'object') {
+            SETTINGS.targetSellEurByAssetId = {};
+        }
+
+        const parsed = parseFloat(value);
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+            delete SETTINGS.targetSellEurByAssetId[assetId];
+        } else {
+            SETTINGS.targetSellEurByAssetId[assetId] = parsed.toFixed(2);
         }
         saveSettings();
     }
@@ -737,9 +803,14 @@
         refsLine.className = 'tm-buff-meta-line tm-buff-meta-refs';
         refsLine.innerHTML = '&nbsp;';
 
+        const actionsLine = document.createElement('span');
+        actionsLine.className = 'tm-buff-meta-line tm-buff-meta-actions';
+        actionsLine.innerHTML = '&nbsp;';
+
         block.appendChild(paidLine);
         block.appendChild(plLine);
         block.appendChild(refsLine);
+        block.appendChild(actionsLine);
 
         priceContainer.insertAdjacentElement('afterend', block);
         return block;
@@ -764,8 +835,9 @@
             const paidLine = block.querySelector('.tm-buff-meta-paid');
             const plLine = block.querySelector('.tm-buff-meta-pl');
             const refsLine = block.querySelector('.tm-buff-meta-refs');
+            const actionsLine = block.querySelector('.tm-buff-meta-actions');
 
-            if (!paidLine || !plLine || !refsLine) return;
+            if (!paidLine || !plLine || !refsLine || !actionsLine) return;
 
             const buyPriceCny = getBuyPriceCnyFromItem(item);
             const marketPriceEur = getMarketPriceEurFromItem(item);
@@ -786,6 +858,9 @@
             const steamCny = Number.isFinite(parseFloat(goodsInfo.steam_price_cny)) ? parseFloat(goodsInfo.steam_price_cny) : null;
             const steamUsd = Number.isFinite(parseFloat(goodsInfo.steam_price)) ? parseFloat(goodsInfo.steam_price) : null;
             const steamEurFromCny = steamCny && Number.isFinite(rate) && rate > 0 ? steamCny * rate : null;
+            const targetSellEur = getAssetTargetSellEur(assetId);
+            const isReadyToSell = Number.isFinite(marketPriceEur) && Number.isFinite(targetSellEur) && marketPriceEur >= targetSellEur;
+            item.classList.toggle('tm-buff-item-ready', !excluded && isReadyToSell);
 
             const showRefs = isShowRefsEnabled();
 
@@ -801,9 +876,16 @@
                 }
 
                 const summaryText = summaryBits.join(' · ');
+                const targetStatusClass = isReadyToSell ? 'tm-buff-target-status ready' : 'tm-buff-target-status';
+                const targetStatusText = targetSellEur ? (isReadyToSell ? 'Ready' : 'Waiting') : '';
                 refsLine.innerHTML =
                     `<span class="tm-buff-meta-label">Refs:</span>` +
-                    `<span class="tm-buff-meta-value">${summaryText}</span>` +
+                    `<span class="tm-buff-meta-value">${summaryText}</span>`;
+
+                actionsLine.innerHTML =
+                    (assetId
+                        ? `<span class="tm-buff-target-wrap"><span class="tm-buff-meta-label">Target €</span><input class="tm-buff-target-input" type="number" min="0" step="0.01" value="${targetSellEur ? targetSellEur.toFixed(2) : ''}" placeholder="--"><span class="${targetStatusClass}">${targetStatusText}</span></span>`
+                        : '') +
                     (assetId
                         ? `<a href="javascript:void(0)" class="tm-buff-exclude-toggle${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Click to include in totals' : 'Click to exclude from totals'}">${excluded ? 'Excluded' : 'Included'}</a>`
                         : '');
@@ -814,17 +896,51 @@
                 if (steamCny) fullParts.push(`Steam (CNY): ¥ ${steamCny.toFixed(2)}`);
                 if (steamEurFromCny) fullParts.push(`Steam (EUR, via rate): € ${steamEurFromCny.toFixed(2)}`);
                 if (steamUsd) fullParts.push(`Steam (USD): $ ${steamUsd.toFixed(2)}`);
+                if (targetSellEur) {
+                    fullParts.push(`Target sell (EUR): € ${targetSellEur.toFixed(2)}`);
+                    fullParts.push(`Status: ${isReadyToSell ? 'Ready' : 'Waiting'}`);
+                }
 
                 refsLine.title = fullParts.join(' · ');
+                actionsLine.removeAttribute('title');
             } else {
-                refsLine.innerHTML =
+                const targetStatusClass = isReadyToSell ? 'tm-buff-target-status ready' : 'tm-buff-target-status';
+                const targetStatusText = targetSellEur ? (isReadyToSell ? 'Ready' : 'Waiting') : '';
+                refsLine.innerHTML = '&nbsp;';
+                actionsLine.innerHTML =
+                    (assetId
+                        ? `<span class="tm-buff-target-wrap"><span class="tm-buff-meta-label">Target €</span><input class="tm-buff-target-input" type="number" min="0" step="0.01" value="${targetSellEur ? targetSellEur.toFixed(2) : ''}" placeholder="--"><span class="${targetStatusClass}">${targetStatusText}</span></span>`
+                        : '') +
                     (assetId
                         ? `<a href="javascript:void(0)" class="tm-buff-exclude-toggle${excluded ? ' is-excluded' : ''}" title="${excluded ? 'Click to include in totals' : 'Click to exclude from totals'}">${excluded ? 'Excluded' : 'Included'}</a>`
                         : '&nbsp;');
                 refsLine.removeAttribute('title');
+                actionsLine.removeAttribute('title');
             }
 
-            const excludeToggle = refsLine.querySelector('.tm-buff-exclude-toggle');
+            const targetInput = actionsLine.querySelector('.tm-buff-target-input');
+            if (targetInput && assetId) {
+                const applyTarget = () => {
+                    setAssetTargetSellEur(assetId, targetInput.value);
+                    const currentRate = getCachedCnyEurRate();
+                    if (currentRate) {
+                        renderPaidEurValues(currentRate, true);
+                        applyPlFilterAndSummary();
+                    } else {
+                        initPaidEurFeature();
+                    }
+                };
+                targetInput.addEventListener('change', applyTarget);
+                targetInput.addEventListener('blur', applyTarget);
+                targetInput.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        applyTarget();
+                    }
+                });
+            }
+
+            const excludeToggle = actionsLine.querySelector('.tm-buff-exclude-toggle');
             if (excludeToggle && assetId) {
                 excludeToggle.addEventListener('click', (event) => {
                     event.preventDefault();
