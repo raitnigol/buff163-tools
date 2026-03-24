@@ -408,6 +408,99 @@
                 color: #ffffff;
             }
 
+            #tm-buff-global-settings-modal .tm-buff-modal-body {
+                background: #ffffff;
+                padding: 0;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-modal-section-title {
+                margin: 0 0 10px 0;
+                font-size: 11px;
+                letter-spacing: 0.03em;
+                text-transform: uppercase;
+                color: #6b7280;
+                font-weight: 700;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-modal-row {
+                padding: 10px 0;
+                border: none;
+                border-bottom: 1px solid #eef2f7;
+                border-radius: 0;
+                background: transparent;
+                margin-bottom: 0;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-modal-check input[type="checkbox"] {
+                transform: translateY(-0.5px);
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-modal-check {
+                font-weight: 600;
+                color: #1f2937;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-modal-hint {
+                margin-top: 10px;
+                line-height: 1.4;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-modal-meta {
+                margin-top: 0;
+                padding-top: 0;
+                border-top: none;
+                font-size: 11px;
+                color: #6b7280;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-modal-meta a {
+                color: #2563eb;
+                text-decoration: none;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-modal-meta a:hover {
+                text-decoration: underline;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-global-wrap {
+                padding: 12px;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-global-header {
+                margin: 0 0 10px 0;
+                padding: 8px 10px;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                background: #f8fafc;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-global-header-title {
+                margin: 0;
+                font-size: 12px;
+                font-weight: 700;
+                color: #111827;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-global-header-sub {
+                margin: 2px 0 0 0;
+                font-size: 11px;
+                color: #6b7280;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-global-footer {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin-top: 12px;
+                padding-top: 10px;
+                border-top: 1px solid #e5e7eb;
+            }
+
+            #tm-buff-global-settings-modal .tm-buff-modal-actions {
+                margin-top: 0;
+            }
+
             #tm-buff-float-settings a {
                 cursor: pointer;
             }
@@ -869,22 +962,35 @@
 
     function getOrCreateGlobalSettingsModal() {
         const bodyHtml = `
-            <div class="tm-buff-modal-row">
-                <label class="tm-buff-modal-check">
-                    <input id="tm-buff-global-only-saleable" type="checkbox">
-                    Only saleable
-                </label>
-            </div>
-            <div class="tm-buff-modal-row">
-                <label class="tm-buff-modal-check">
-                    <input id="tm-buff-global-show-refs" type="checkbox">
-                    Show refs
-                </label>
-            </div>
-            <div class="tm-buff-modal-hint" id="tm-buff-global-fx-status"></div>
-            <div class="tm-buff-modal-hint">More options can be moved here later.</div>
-            <div class="tm-buff-modal-actions">
-                <button type="button" class="tm-buff-modal-btn primary" id="tm-buff-global-settings-save">Save</button>
+            <div class="tm-buff-global-wrap">
+                <div class="tm-buff-global-header">
+                    <p class="tm-buff-global-header-title">Inventory preferences</p>
+                    <p class="tm-buff-global-header-sub">Control visibility and filtering behavior.</p>
+                </div>
+                <div class="tm-buff-modal-section-title">Display & Filters</div>
+                <div class="tm-buff-modal-row">
+                    <label class="tm-buff-modal-check">
+                        <input id="tm-buff-global-only-saleable" type="checkbox">
+                        Only saleable
+                    </label>
+                </div>
+                <div class="tm-buff-modal-row">
+                    <label class="tm-buff-modal-check">
+                        <input id="tm-buff-global-show-refs" type="checkbox">
+                        Show refs
+                    </label>
+                </div>
+                <div class="tm-buff-modal-hint" id="tm-buff-global-fx-status"></div>
+                <div class="tm-buff-modal-hint">More options can be moved here later.</div>
+                <div class="tm-buff-global-footer">
+                    <div class="tm-buff-modal-meta">
+                        buff163-tools by Rait Nigol ·
+                        <a href="https://github.com/raitnigol/buff163-tools/blob/main/buff163-tools.user.js" target="_blank" rel="noopener noreferrer">GitHub</a>
+                    </div>
+                    <div class="tm-buff-modal-actions">
+                        <button type="button" class="tm-buff-modal-btn primary" id="tm-buff-global-settings-save">Save</button>
+                    </div>
+                </div>
             </div>
         `;
         const backdrop = createStandardModalBackdrop({
