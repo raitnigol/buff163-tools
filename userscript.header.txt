@@ -1,0 +1,20 @@
+// ==UserScript==
+// @name         buff163-tools – Full Inventory Toggle
+// @namespace    https://github.com/raitnigol/buff163-tools
+// @version      1.6.0
+// @description  Toggle between default (50) and full inventory view on buff.163.com, show EUR equivalent for CNY purchase prices, calculate per-item P/L, filter only saleable items, and filter winners/losers
+// @author       Rait Nigol
+// @license      MIT
+//
+// @match        https://buff.163.com/market/steam_inventory*
+// @match        https://buff.163.com/goods/*
+// @icon         https://buff.163.com/favicon.ico
+//
+// @homepageURL  https://github.com/raitnigol/buff163-tools
+// @supportURL   https://github.com/raitnigol/buff163-tools/issues
+//
+// @downloadURL  https://raw.githubusercontent.com/raitnigol/buff163-tools/main/buff163-tools.user.js
+// @updateURL    https://raw.githubusercontent.com/raitnigol/buff163-tools/main/buff163-tools.user.js
+//
+// @grant        none
+// ==/UserScript==
