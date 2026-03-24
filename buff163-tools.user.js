@@ -22,7 +22,18 @@
 (function () {
     'use strict';
 
-    const SELECTORS = {
+    const MODULES = globalThis.__BUFF163_MODULES__ || {};
+    const MODULE_SELECTORS = MODULES.SELECTORS || null;
+    const MODULE_STORAGE_KEYS = MODULES.STORAGE_KEYS || null;
+    const MODULE_FALLBACK_DEFAULT_PAGE_SIZE = MODULES.FALLBACK_DEFAULT_PAGE_SIZE;
+    const MODULE_LOAD_SETTINGS = typeof MODULES.loadSettings === 'function' ? MODULES.loadSettings : null;
+    const MODULE_SAVE_SETTINGS = typeof MODULES.saveSettings === 'function' ? MODULES.saveSettings : null;
+    const MODULE_PARSE_HASH_PARAMS = typeof MODULES.parseHashParams === 'function' ? MODULES.parseHashParams : null;
+    const MODULE_BUILD_HASH = typeof MODULES.buildHash === 'function' ? MODULES.buildHash : null;
+    const MODULE_UPDATE_HASH_AND_RELOAD =
+        typeof MODULES.updateHashAndReload === 'function' ? MODULES.updateHashAndReload : null;
+
+    const SELECTORS = MODULE_SELECTORS || {
         contTab: '.market-header.black .cont-tab',
         tabList: '.market-header.black .cont-tab > ul',
         briefInfo: '.market-header.black .brief-info',
@@ -32,24 +43,27 @@
         inventoryItems: '#j_list_card li.my_inventory',
     };
 
-    const STORAGE_KEY_DEFAULT_PAGE_SIZE = 'tm_buff_default_page_size';
-    const STORAGE_KEY_FULL_MODE = 'tm_buff_full_mode';
-    const STORAGE_KEY_FULL_PAGE_SIZE = 'tm_buff_full_page_size';
-    const STORAGE_KEY_ONLY_SALEABLE = 'tm_buff_only_saleable';
-    const STORAGE_KEY_PL_FILTER = 'tm_buff_pl_filter';
-    const STORAGE_KEY_SHOW_REFS = 'tm_buff_show_refs';
+    const STORAGE_KEY_DEFAULT_PAGE_SIZE = MODULE_STORAGE_KEYS?.defaultPageSize || 'tm_buff_default_page_size';
+    const STORAGE_KEY_FULL_MODE = MODULE_STORAGE_KEYS?.fullMode || 'tm_buff_full_mode';
+    const STORAGE_KEY_FULL_PAGE_SIZE = MODULE_STORAGE_KEYS?.fullPageSize || 'tm_buff_full_page_size';
+    const STORAGE_KEY_ONLY_SALEABLE = MODULE_STORAGE_KEYS?.onlySaleable || 'tm_buff_only_saleable';
+    const STORAGE_KEY_PL_FILTER = MODULE_STORAGE_KEYS?.plFilter || 'tm_buff_pl_filter';
+    const STORAGE_KEY_SHOW_REFS = MODULE_STORAGE_KEYS?.showRefs || 'tm_buff_show_refs';
 
-    const SETTINGS_KEY = 'tm_buff_settings_v1';
+    const SETTINGS_KEY = MODULE_STORAGE_KEYS?.settings || 'tm_buff_settings_v1';
 
-    const FALLBACK_DEFAULT_PAGE_SIZE = 50;
+    const FALLBACK_DEFAULT_PAGE_SIZE =
+        Number.isFinite(MODULE_FALLBACK_DEFAULT_PAGE_SIZE) && MODULE_FALLBACK_DEFAULT_PAGE_SIZE > 0
+            ? MODULE_FALLBACK_DEFAULT_PAGE_SIZE
+            : 50;
 
-    const STORAGE_KEY_CNY_EUR_RATE = 'tm_buff_cny_eur_rate';
-    const STORAGE_KEY_CNY_EUR_RATE_DATE = 'tm_buff_cny_eur_rate_date';
+    const STORAGE_KEY_CNY_EUR_RATE = MODULE_STORAGE_KEYS?.cnyEurRate || 'tm_buff_cny_eur_rate';
+    const STORAGE_KEY_CNY_EUR_RATE_DATE = MODULE_STORAGE_KEYS?.cnyEurRateDate || 'tm_buff_cny_eur_rate_date';
 
     let LAST_RATE_KEY = '';
     let FX_STATUS_TEXT = 'FX: not loaded';
 
-    function loadSettings() {
+    function loadSettingsFallback() {
         try {
             const raw = localStorage.getItem(SETTINGS_KEY);
             if (raw) {
@@ -92,9 +106,31 @@
         };
     }
 
+    function loadSettings() {
+        if (MODULE_LOAD_SETTINGS) {
+            try {
+                const loaded = MODULE_LOAD_SETTINGS();
+                if (loaded && typeof loaded === 'object') {
+                    return loaded;
+                }
+            } catch (err) {
+                // fall through to local fallback
+            }
+        }
+        return loadSettingsFallback();
+    }
+
     let SETTINGS = loadSettings();
 
     function saveSettings() {
+        if (MODULE_SAVE_SETTINGS) {
+            try {
+                MODULE_SAVE_SETTINGS(SETTINGS);
+                return;
+            } catch (err) {
+                // fall through to local fallback
+            }
+        }
         try {
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS));
         } catch (err) {
@@ -667,6 +703,13 @@
     }
 
     function parseHashParams() {
+        if (MODULE_PARSE_HASH_PARAMS) {
+            try {
+                return MODULE_PARSE_HASH_PARAMS();
+            } catch (err) {
+                // fall through to local fallback
+            }
+        }
         const rawHash = window.location.hash.startsWith('#')
             ? window.location.hash.slice(1)
             : window.location.hash;
@@ -675,6 +718,13 @@
     }
 
     function buildHash(params) {
+        if (MODULE_BUILD_HASH) {
+            try {
+                return MODULE_BUILD_HASH(params);
+            } catch (err) {
+                // fall through to local fallback
+            }
+        }
         const str = params.toString();
         return str ? `#${str}` : '';
     }
@@ -1112,6 +1162,14 @@
     }
 
     function updateHashAndReload(mutator) {
+        if (MODULE_UPDATE_HASH_AND_RELOAD) {
+            try {
+                MODULE_UPDATE_HASH_AND_RELOAD(mutator);
+                return;
+            } catch (err) {
+                // fall through to local fallback
+            }
+        }
         const params = parseHashParams();
         mutator(params);
 
