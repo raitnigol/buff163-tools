@@ -47,6 +47,7 @@
     const STORAGE_KEY_CNY_EUR_RATE_DATE = 'tm_buff_cny_eur_rate_date';
 
     let LAST_RATE_KEY = '';
+    let FX_STATUS_TEXT = 'FX: not loaded';
 
     function loadSettings() {
         try {
@@ -494,11 +495,6 @@
                 color: #d9534f;
             }
 
-            #tm-buff-toolbar .tm-buff-fx {
-                color: #9aa0a6;
-                font-size: 11px;
-            }
-
             #tm-buff-goods-analysis {
                 margin-top: 6px;
                 font-size: 11px;
@@ -885,6 +881,7 @@
                     Show refs
                 </label>
             </div>
+            <div class="tm-buff-modal-hint" id="tm-buff-global-fx-status"></div>
             <div class="tm-buff-modal-hint">More options can be moved here later.</div>
             <div class="tm-buff-modal-actions">
                 <button type="button" class="tm-buff-modal-btn primary" id="tm-buff-global-settings-save">Save</button>
@@ -921,8 +918,10 @@
         const modal = getOrCreateGlobalSettingsModal();
         const onlySaleableInput = modal.querySelector('#tm-buff-global-only-saleable');
         const showRefsInput = modal.querySelector('#tm-buff-global-show-refs');
+        const fxStatusEl = modal.querySelector('#tm-buff-global-fx-status');
         if (onlySaleableInput) onlySaleableInput.checked = isOnlySaleableEnabled();
         if (showRefsInput) showRefsInput.checked = isShowRefsEnabled();
+        if (fxStatusEl) fxStatusEl.textContent = FX_STATUS_TEXT;
         modal.style.display = 'flex';
     }
 
@@ -1150,6 +1149,10 @@
         return localStorage.getItem(STORAGE_KEY_CNY_EUR_RATE_DATE) || '';
     }
 
+    function getTodayIsoDate() {
+        return new Date().toISOString().slice(0, 10);
+    }
+
     function setCachedCnyEurRate(rate, date = '') {
         if (!Number.isFinite(rate) || rate <= 0) return;
         localStorage.setItem(STORAGE_KEY_CNY_EUR_RATE, String(rate));
@@ -1160,24 +1163,34 @@
 
     async function ensureCnyEurRate() {
         const cachedRate = getCachedCnyEurRate();
-        if (cachedRate) {
+        const cachedDate = getCachedCnyEurRateDate();
+        const today = getTodayIsoDate();
+
+        if (cachedRate && cachedDate === today) {
             return cachedRate;
         }
 
-        const response = await fetch('https://api.frankfurter.dev/v1/latest?base=CNY&symbols=EUR');
-        if (!response.ok) {
-            throw new Error(`Failed to fetch exchange rate: HTTP ${response.status}`);
+        try {
+            const response = await fetch('https://api.frankfurter.dev/v1/latest?base=CNY&symbols=EUR');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch exchange rate: HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const rate = data?.rates?.EUR;
+
+            if (!Number.isFinite(rate) || rate <= 0) {
+                throw new Error('Invalid CNY→EUR exchange rate received');
+            }
+
+            setCachedCnyEurRate(rate, data?.date || '');
+            return rate;
+        } catch (err) {
+            if (cachedRate) {
+                return cachedRate;
+            }
+            throw err;
         }
-
-        const data = await response.json();
-        const rate = data?.rates?.EUR;
-
-        if (!Number.isFinite(rate) || rate <= 0) {
-            throw new Error('Invalid CNY→EUR exchange rate received');
-        }
-
-        setCachedCnyEurRate(rate, data?.date || '');
-        return rate;
     }
 
     function parseJsonAttribute(element, attrName) {
@@ -1545,14 +1558,10 @@
     }
 
     function updateFxInfo(opts) {
-        const fxEl = document.getElementById('tm-buff-fx');
-        if (!fxEl) return;
-
         const { rate, date, error } = opts || {};
 
         if (error) {
-            fxEl.textContent = 'FX: unavailable';
-            fxEl.title = 'CNY→EUR rate could not be fetched. P/L may be unavailable.';
+            FX_STATUS_TEXT = 'FX: unavailable';
             return;
         }
 
@@ -1562,15 +1571,13 @@
         const effectiveDate = date || getCachedCnyEurRateDate();
 
         if (!effectiveRate) {
-            fxEl.textContent = 'FX: not loaded';
-            fxEl.title = 'CNY→EUR rate not loaded yet.';
+            FX_STATUS_TEXT = 'FX: not loaded';
             return;
         }
 
-        fxEl.textContent = effectiveDate
+        FX_STATUS_TEXT = effectiveDate
             ? `FX: 1 CNY = € ${effectiveRate.toFixed(4)} (${effectiveDate})`
             : `FX: 1 CNY = € ${effectiveRate.toFixed(4)}`;
-        fxEl.title = 'CNY→EUR conversion rate used for P/L calculations.';
     }
 
     function getOrCreateToolbar() {
@@ -1621,15 +1628,9 @@
         summary.className = 'tm-buff-summary';
         summary.innerHTML = 'Visible P/L (All, 0 items): <strong>€ 0.00</strong>';
 
-        const fxInfo = document.createElement('span');
-        fxInfo.id = 'tm-buff-fx';
-        fxInfo.className = 'tm-buff-fx';
-        fxInfo.textContent = 'FX: not loaded';
-
         toolbar.appendChild(title);
         toolbar.appendChild(plFilterWrap);
         toolbar.appendChild(summary);
-        toolbar.appendChild(fxInfo);
 
         criteria.insertAdjacentElement('beforebegin', toolbar);
         return toolbar;
